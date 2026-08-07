@@ -1072,9 +1072,587 @@ body.theme-light .habit-cal .day-label{color:rgba(0,0,0,0.35)}
 body.theme-light .pomo-custom-row label{color:rgba(0,0,0,0.45)}
 </style>
 
-</head>
 
-<body class="theme-aurora" style="animation-play-state: running;">
+
+<style id="vis-tools-style">
+/* 小工具分类标题 */
+.vis-cat-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  margin: 16px 0 10px 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vis-cat-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
+}
+</style>
+<style id="vis-full-upgrade-css">
+/* ═══ 眼健康工具 - 精美卡片网格 ═══ */
+.vis-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.vis-tool-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 8px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  overflow: hidden;
+  min-height: 96px;
+}
+.vis-tool-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--card-accent, linear-gradient(90deg, #667eea, #764ba2));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.vis-tool-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, var(--card-glow, rgba(102,126,234,0.08)), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.35s;
+  pointer-events: none;
+}
+.vis-tool-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.07);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.vis-tool-card:hover::before,
+.vis-tool-card:hover::after { opacity: 1; }
+.vis-tool-card:active { transform: scale(0.96); }
+.vis-tool-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s;
+}
+.vis-tool-card:hover .vis-tool-icon { transform: scale(1.1); }
+.vis-tool-icon svg {
+  width: 22px; height: 22px;
+  stroke: rgba(255,255,255,0.85);
+  transition: stroke 0.3s;
+}
+.vis-tool-card:hover .vis-tool-icon svg { stroke: rgba(255,255,255,1); }
+.vis-tool-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+.vis-tool-sub {
+  font-size: 9px;
+  color: rgba(255,255,255,0.35);
+  text-align: center;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  margin-top: -2px;
+}
+/* 每个工具独特配色 */
+.vis-tool-card[data-tool="chart"] { --card-accent: linear-gradient(90deg, #667eea, #764ba2); --card-glow: rgba(102,126,234,0.1); }
+.vis-tool-card[data-tool="chart"] .vis-tool-icon { background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15)); }
+.vis-tool-card[data-tool="color"] { --card-accent: linear-gradient(90deg, #f093fb, #f5576c); --card-glow: rgba(240,147,251,0.1); }
+.vis-tool-card[data-tool="color"] .vis-tool-icon { background: linear-gradient(135deg, rgba(240,147,251,0.15), rgba(245,87,108,0.15)); }
+.vis-tool-card[data-tool="astigmatism"] { --card-accent: linear-gradient(90deg, #ffd200, #f7971e); --card-glow: rgba(255,210,0,0.1); }
+.vis-tool-card[data-tool="astigmatism"] .vis-tool-icon { background: linear-gradient(135deg, rgba(255,210,0,0.15), rgba(247,151,30,0.15)); }
+.vis-tool-card[data-tool="timer2020"] { --card-accent: linear-gradient(90deg, #4ade80, #22d3ee); --card-glow: rgba(74,222,128,0.1); }
+.vis-tool-card[data-tool="timer2020"] .vis-tool-icon { background: linear-gradient(135deg, rgba(74,222,128,0.15), rgba(34,211,238,0.15)); }
+.vis-tool-card[data-tool="relax"] { --card-accent: linear-gradient(90deg, #a78bfa, #818cf8); --card-glow: rgba(167,139,250,0.1); }
+.vis-tool-card[data-tool="relax"] .vis-tool-icon { background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(129,140,248,0.15)); }
+.vis-tool-card[data-tool="tips"] { --card-accent: linear-gradient(90deg, #fb923c, #fbbf24); --card-glow: rgba(251,146,60,0.1); }
+.vis-tool-card[data-tool="tips"] .vis-tool-icon { background: linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,191,36,0.15)); }
+
+/* ═══ 弹出面板升级 ═══ */
+.vis-tool-panel {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(8px);
+  z-index: 10001;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  animation: visPanelFadeIn 0.3s ease;
+}
+@keyframes visPanelFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.vis-tool-panel.active { display: flex; }
+.vis-tool-content {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  animation: visContentPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+}
+@keyframes visContentPop {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.vis-tool-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+  z-index: 2;
+}
+.vis-tool-close:hover {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  transform: rotate(90deg);
+}
+.vis-tool-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: white;
+}
+
+/* ═══ 视力表升级 ═══ */
+.eye-chart-wrap {
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  padding: 24px 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.06);
+}
+.eye-chart-line {
+  margin: 6px 0;
+  font-family: 'Times New Roman', Arial, sans-serif;
+  font-weight: bold;
+  color: #111;
+  letter-spacing: 0.15em;
+  transition: all 0.2s;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.eye-chart-line:hover {
+  background: rgba(102,126,234,0.12);
+  transform: scale(1.02);
+}
+.eye-chart-level {
+  font-size: 10px;
+  color: #999;
+  float: right;
+  font-weight: normal;
+  letter-spacing: 0;
+}
+
+/* ═══ 色盲测试升级 ═══ */
+.color-test-wrap { text-align: center; }
+.color-test-plate {
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  margin: 16px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  font-weight: bold;
+  color: white;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+.color-test-plate:hover { transform: scale(1.03); }
+.color-test-options {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.color-opt-btn {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.15);
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+}
+.color-opt-btn:hover {
+  transform: scale(1.1);
+  border-color: rgba(255,255,255,0.4);
+}
+.color-opt-btn.correct {
+  border-color: #4ade80;
+  box-shadow: 0 0 16px rgba(74,222,128,0.5);
+  animation: visCorrectPulse 0.5s;
+}
+.color-opt-btn.wrong {
+  border-color: #ef4444;
+  box-shadow: 0 0 16px rgba(239,68,68,0.5);
+  animation: visWrongShake 0.4s;
+}
+@keyframes visCorrectPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+@keyframes visWrongShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.color-test-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.color-test-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.3s;
+}
+.color-test-dot.pass { background: #4ade80; }
+.color-test-dot.fail { background: #ef4444; }
+.color-test-dot.current { background: #667eea; transform: scale(1.3); }
+
+/* ═══ 散光测试升级 ═══ */
+.astigmatism-wrap { text-align: center; }
+.astigmatism-chart {
+  width: 220px; height: 220px;
+  margin: 16px auto;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+.astigmatism-chart svg { width: 100%; height: 100%; }
+.astig-toggle {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+.astig-toggle button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.astig-toggle button:hover,
+.astig-toggle button.active {
+  background: rgba(102,126,234,0.2);
+  border-color: #667eea;
+  color: white;
+}
+
+/* ═══ 20-20-20 定时器升级 ═══ */
+.timer-wrap { text-align: center; }
+.timer-ring {
+  width: 180px; height: 180px;
+  margin: 16px auto;
+  position: relative;
+}
+.timer-ring svg {
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+}
+.timer-ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 6; }
+.timer-ring-progress {
+  fill: none;
+  stroke: url(#timerGrad);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+.timer-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.timer-ring-time {
+  font-size: 40px;
+  font-weight: 700;
+  color: #4ade80;
+  font-variant-numeric: tabular-nums;
+}
+.timer-ring-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
+.timer-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.timer-btn-new {
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.timer-btn-new.start {
+  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  color: #000;
+}
+.timer-btn-new.stop {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+}
+.timer-btn-new:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+/* ═══ 眼部放松升级 ═══ */
+.relax-wrap { text-align: center; }
+.relax-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+.relax-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: left;
+}
+.relax-step:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.12);
+}
+.relax-step.active {
+  background: rgba(167,139,250,0.12);
+  border-color: rgba(167,139,250,0.3);
+}
+.relax-step-num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.relax-step-text { flex: 1; }
+.relax-step-title { font-size: 14px; font-weight: 600; color: white; }
+.relax-step-desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+.relax-step-time { font-size: 12px; color: #a78bfa; font-weight: 600; white-space: nowrap; }
+.relax-start-btn {
+  padding: 14px 32px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+  color: white;
+  transition: all 0.25s;
+  margin-top: 8px;
+}
+.relax-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(167,139,250,0.4);
+}
+
+/* ═══ 护眼知识升级 ═══ */
+.tips-wrap { color: rgba(255,255,255,0.9); }
+.tips-category { margin-bottom: 16px; }
+.tips-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.tips-cat-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.tips-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.7);
+}
+.tips-bullet {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fb923c;
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+
+/* ═══ 9个训练项目 mini-pill 升级 ═══ */
+.games-col .mini-pill {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.games-col .mini-pill::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.games-col .mini-pill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.04), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.games-col .mini-pill:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateX(4px);
+}
+.games-col .mini-pill:hover::before,
+.games-col .mini-pill:hover::after { opacity: 1; }
+.games-col .mini-pill:active { transform: scale(0.98); }
+.games-col .mini-pill .tool-icon { transition: transform 0.3s; }
+.games-col .mini-pill:hover .tool-icon { transform: scale(1.15) rotate(-5deg); }
+
+/* ═══ 手机端适配 ═══ */
+@media (max-width: 768px) {
+  .vis-tools-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .vis-tool-card { padding: 12px 6px 10px; min-height: 82px; border-radius: 12px; }
+  .vis-tool-icon { width: 34px; height: 34px; font-size: 17px; border-radius: 10px; }
+  .vis-tool-icon svg { width: 18px; height: 18px; }
+  .vis-tool-name { font-size: 10px; }
+  .vis-tool-sub { display: none; }
+  .vis-tool-content { padding: 22px 16px 18px; border-radius: 16px; max-height: 88vh; }
+  .timer-ring { width: 150px; height: 150px; }
+  .timer-ring-time { font-size: 32px; }
+  .color-test-plate { width: 160px; height: 160px; font-size: 44px; }
+}
+@media (max-width: 360px) {
+  .vis-tools-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head><body class="theme-aurora" style="animation-play-state: running;">}
+
+
+
+
+
 <div id="splash" class="hide"><div><div class="spinner">&lt;</div><div class="sp-text">加载中…</div></div></div>
 <div class="container">
 
@@ -1928,10 +2506,46 @@ body.theme-light .ct-val{color:#1a1a2e}
 <button class="mini-btn sec" onclick="togglePeriPause()">⏸️ 暂停</button>
 </div>
 </div></div></div>
+
+<!-- 眼健康小工具 -->
+<div class="vis-cat-title">🛠️ 眼健康工具</div>
+<div class="vis-tools-grid">
+  <div class="vis-tool-card" data-tool="chart" onclick="openVisTool('chart')">
+    <div class="vis-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></div>
+    <div class="vis-tool-name">视力测试</div>
+    <div class="vis-tool-sub">E字视力表</div>
+  </div>
+  <div class="vis-tool-card" data-tool="color" onclick="openVisTool('color')">
+    <div class="vis-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="10.5" r="2.5"></circle><circle cx="8.5" cy="7.5" r="2.5"></circle><circle cx="6.5" cy="12.5" r="2.5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg></div>
+    <div class="vis-tool-name">色盲测试</div>
+    <div class="vis-tool-sub">色觉检测</div>
+  </div>
+  <div class="vis-tool-card" data-tool="astigmatism" onclick="openVisTool('astigmatism')">
+    <div class="vis-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></div>
+    <div class="vis-tool-name">散光测试</div>
+    <div class="vis-tool-sub">放射线检测</div>
+  </div>
+  <div class="vis-tool-card" data-tool="timer2020" onclick="openVisTool('timer2020')">
+    <div class="vis-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+    <div class="vis-tool-name">20-20-20</div>
+    <div class="vis-tool-sub">护眼定时器</div>
+  </div>
+  <div class="vis-tool-card" data-tool="relax" onclick="openVisTool('relax')">
+    <div class="vis-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg></div>
+    <div class="vis-tool-name">眼部放松</div>
+    <div class="vis-tool-sub">引导式眼操</div>
+  </div>
+  <div class="vis-tool-card" data-tool="tips" onclick="openVisTool('tips')">
+    <div class="vis-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2v1"></path><path d="M12 7a5 5 0 0 1 5 5c0 2.5-2 4-3 5.5V19H10v-1.5C9 16 7 14.5 7 12a5 5 0 0 1 5-5z"></path></svg></div>
+    <div class="vis-tool-name">护眼知识</div>
+    <div class="vis-tool-sub">科学护眼</div>
+  </div>
+</div>
+
 </div>
 </div>
 
-<!-- 🎪 休闲小游戏（侧边抽屉） -->
+<!--  休闲小游戏（侧边抽屉） -->
 <div class="wb-drawer cg-drawer" id="sec-cg">
   <div class="wb-drawer-head"><div class="wb-drawer-title">🎪 休闲小游戏</div><div class="wb-drawer-close" onclick="cgDrawerClose()">×</div></div>
   <div class="wb-wrap">
@@ -4946,7 +5560,9 @@ body.theme-light .fav-empty{color:rgba(0,0,0,0.4)}
       '<div class="sponsor-tip">本网站免费使用，可以复制下方链接分享给需要的朋友，不用下载不用安装。</div>'+
       '<div class="share-link-card"><span class="share-link-ico">🔗</span><div class="share-link-meta"><div class="share-link-label">网站链接</div><div class="share-link-val">zxl-311.pages.dev</div></div><button class="share-link-copy" onclick="ZX.copyLink()">复制</button></div>'+
       '<div class="sponsor-tip">手机或电脑：可在微信直接打开使用。或复制链接到浏览器，打开使用。</div></div></div>'+
-      '<div id="toast" class="toast"></div>';
+
+      '<div id="toast" class="toast"></div>'+
+      '<div class="vis-tool-panel" id="visToolPanel"><div class="vis-tool-content"><button class="vis-tool-close" onclick="closeVisTool()">&#10005;</button><div id="visToolBody"></div></div></div>';
     document.body.appendChild(wrap);
   }
   window.ZX={openFav:openFav,closeFav:closeFav,openShare:openShare,closeShare:closeShare,copyLink:copyLink,closeAnnounce:closeAnnounce};
@@ -7980,4 +8596,362 @@ body.theme-light .wb-mod-mini{background:rgba(0,0,0,0.03);border-color:rgba(0,0,
 body.theme-light .wb-mod-mini .t{color:rgba(0,0,0,0.85)}
 body.theme-light .wb-mod-mini .d{color:rgba(0,0,0,0.4)}
 </style>
+<style id="vis-canvas-scale">
+/* 眼训练画布优化 - 移除高度限制，让画布自然比例显示 */
+/* 使用较大断点确保在平板和手机上都能生效 */
+@media (max-width: 1024px) {
+  .game-inline-panel .sponsor-card canvas,
+  .vis-drawer .sponsor-card canvas,
+  .vis-drawer canvas {
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+  /* 打靶训练（正方形画布）保持比例 */
+  #shootCanvas {
+    aspect-ratio: 1 / 1 !important;
+  }
+}
+</style>
+<script id="vis-canvas-scale-js">
+(function(){
+  // 保存原始 visHiDPI 函数
+  var _origVisHiDPI = window.visHiDPI;
+
+  // 覆盖 visHiDPI，在 HiDPI 缩放后应用额外缩放
+  window.visHiDPI = function(canvas) {
+    // 先调用原始 HiDPI 缩放
+    _origVisHiDPI(canvas);
+
+    // 再应用额外的缩放因子（让游戏内容更大）
+    var SCALE = 0.65; // 0.65 = 内容放大约 1.5 倍
+    if (!canvas._visScaled) {
+      var w = canvas.width;
+      var h = canvas.height;
+      canvas.width = Math.round(w * SCALE);
+      canvas.height = Math.round(h * SCALE);
+      canvas._visScaled = true;
+    }
+  };
+
+  console.log('[VisCanvasScale] visHiDPI 已覆盖，游戏内容将放大显示');
+})();
+</script>
+
+
+
+<script id="vis-tools-js">
+(function(){
+  /* ═══ 色盲测试数据 ═══ */
+  var colorTests = [
+    { num: '5', bg: 'radial-gradient(circle at 35% 40%, #c92a2a 0%, #e03131 30%, #ff6b6b 60%, #c92a2a 100%)', answer: '5', options: ['5','3','6','8'] },
+    { num: '6', bg: 'radial-gradient(circle at 60% 35%, #2b8a3e 0%, #40c057 30%, #69db7c 60%, #2b8a3e 100%)', answer: '6', options: ['6','5','9','4'] },
+    { num: '2', bg: 'radial-gradient(circle at 40% 55%, #e67700 0%, #f59f00 30%, #ffd43b 60%, #e67700 100%)', answer: '2', options: ['2','3','7','1'] },
+    { num: '42', bg: 'radial-gradient(circle at 50% 50%, #1864ab 0%, #228be6 30%, #74c0fc 60%, #1864ab 100%)', answer: '42', options: ['42','72','34','29'] },
+    { num: '16', bg: 'radial-gradient(circle at 45% 45%, #862e9c 0%, #be4bdb 30%, #da77f2 60%, #862e9c 100%)', answer: '16', options: ['16','46','10','73'] }
+  ];
+  var colorTestIdx = 0;
+  var colorTestResults = [];
+
+  /* ═══ 散光测试变量 ═══ */
+  var astigEye = 'both';
+
+  /* ═══ 放松操数据 ═══ */
+  var relaxSteps = [
+    { title: '眨眼放松', desc: '快速眨眼20次，让泪液均匀分布，缓解眼干', time: '30秒', icon: '\u{1F441}\uFE0F' },
+    { title: '远近调焦', desc: '看近处手指3秒，再看远处3秒，反复训练睫状肌', time: '60秒', icon: '\u{1F504}' },
+    { title: '眼球转动', desc: '顺时针转10圈，逆时针转10圈，锻炼眼外肌', time: '40秒', icon: '\u{1F300}' },
+    { title: '热敷双眼', desc: '搓热双手，轻轻覆盖双眼，促进眼周血液循环', time: '30秒', icon: '\u{1F932}' },
+    { title: '眉骨按摩', desc: '用指腹沿眉骨从内向外轻轻按摩，放松眼周肌肉', time: '40秒', icon: '\u{1F486}' }
+  ];
+  var relaxActiveStep = -1;
+
+  /* ═══ 生成散光SVG ═══ */
+  function buildAstigSVG() {
+    var lines = '';
+    for (var i = 0; i < 36; i++) {
+      var angle = i * 10;
+      var rad = angle * Math.PI / 180;
+      var x1 = 110 + 20 * Math.cos(rad);
+      var y1 = 110 + 20 * Math.sin(rad);
+      var x2 = 110 + 100 * Math.cos(rad);
+      var y2 = 110 + 100 * Math.sin(rad);
+      lines += '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="#333" stroke-width="1.5"/>';
+    }
+    return '<svg viewBox="0 0 220 220">' + lines + '<circle cx="110" cy="110" r="18" fill="none" stroke="#333" stroke-width="1.5"/></svg>';
+  }
+
+  /* ═══ 小工具内容 ═══ */
+  var visTools = {
+    chart: {
+      title: '\u{1F441}\uFE0F 视力测试',
+      content: '<div class="eye-chart-wrap">' +
+        '<div class="eye-chart-line" style="font-size:52px">E <span class="eye-chart-level">4.0</span></div>' +
+        '<div class="eye-chart-line" style="font-size:40px">F P <span class="eye-chart-level">4.1</span></div>' +
+        '<div class="eye-chart-line" style="font-size:32px">T O Z <span class="eye-chart-level">4.2</span></div>' +
+        '<div class="eye-chart-line" style="font-size:26px">L P E D <span class="eye-chart-level">4.3</span></div>' +
+        '<div class="eye-chart-line" style="font-size:21px">P E C F D <span class="eye-chart-level">4.4</span></div>' +
+        '<div class="eye-chart-line" style="font-size:17px">E D F C Z P <span class="eye-chart-level">4.5</span></div>' +
+        '<div class="eye-chart-line" style="font-size:14px">F E L O P Z D <span class="eye-chart-level">4.6</span></div>' +
+        '<div class="eye-chart-line" style="font-size:11px">D E F P O T E C <span class="eye-chart-level">4.7</span></div>' +
+        '<div class="eye-chart-line" style="font-size:9px">C F L P T E D O <span class="eye-chart-level">4.8</span></div>' +
+        '<div class="eye-chart-line" style="font-size:7px">E F D P L T C O <span class="eye-chart-level">4.9</span></div>' +
+        '<div class="eye-chart-line" style="font-size:6px">D F E C P O T L <span class="eye-chart-level">5.0</span></div>' +
+        '</div>' +
+        '<p style="color:rgba(255,255,255,0.55);margin-top:16px;font-size:13px;line-height:1.6">\u{1F4A1} 遮住一只眼，距离屏幕 50cm，从大到小辨认字母 E 的开口方向。<br>能看清的最小行即为你的视力值。</p>'
+    },
+    color: {
+      title: '\u{1F3A8} 色盲测试',
+      getContent: function() {
+        var t = colorTests[colorTestIdx];
+        var optsHtml = t.options.map(function(o) {
+          return '<button class="color-opt-btn" onclick="checkColorAnswer(this,\''+o+'\')">'+o+'</button>';
+        }).join('');
+        var progressHtml = colorTests.map(function(_, i) {
+          var cls = 'color-test-dot';
+          if (i < colorTestResults.length) cls += colorTestResults[i] ? ' pass' : ' fail';
+          else if (i === colorTestIdx) cls += ' current';
+          return '<div class="'+cls+'"></div>';
+        }).join('');
+        return '<div class="color-test-wrap">' +
+          '<p style="color:rgba(255,255,255,0.55);font-size:13px">遮住一只眼，辨认圆盘中隐藏的数字</p>' +
+          '<div class="color-test-plate" style="background:'+t.bg+'">' +
+          '<span style="position:relative;z-index:1;text-shadow:0 2px 8px rgba(0,0,0,0.3)">' + t.num + '</span>' +
+          '</div>' +
+          '<div class="color-test-options">' + optsHtml + '</div>' +
+          '<div class="color-test-progress">' + progressHtml + '</div>' +
+          '<p style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:12px">第 ' + (colorTestIdx+1) + ' / ' + colorTests.length + ' 题</p>' +
+          '</div>';
+      }
+    },
+    astigmatism: {
+      title: '\u{1F506} 散光测试',
+      getContent: function() {
+        return '<div class="astigmatism-wrap">' +
+          '<p style="color:rgba(255,255,255,0.55);font-size:13px">遮住一只眼，观察放射线条<br>如果所有方向线条清晰度一致，则无散光</p>' +
+          '<div class="astigmatism-chart">' + buildAstigSVG() + '</div>' +
+          '<div class="astig-toggle">' +
+          '<button class="' + (astigEye==='both'?'active':'') + '" onclick="setAstigEye(\'both\')">双眼</button>' +
+          '<button class="' + (astigEye==='left'?'active':'') + '" onclick="setAstigEye(\'left\')">左眼</button>' +
+          '<button class="' + (astigEye==='right'?'active':'') + '" onclick="setAstigEye(\'right\')">右眼</button>' +
+          '</div>' +
+          '<div style="margin-top:16px;padding:14px;background:rgba(255,255,255,0.04);border-radius:12px;text-align:left">' +
+          '<p style="color:rgba(255,255,255,0.7);font-size:12px;line-height:1.7">' +
+          '\u2705 <strong>正常</strong>：所有方向线条清晰度一致<br>' +
+          '\u26A0\uFE0F <strong>可能有散光</strong>：某个方向的线条明显更清晰或更模糊<br>' +
+          '\u{1F4A1} 建议：如发现有差异，请到专业机构做详细检查' +
+          '</p></div></div>';
+      }
+    },
+    timer2020: {
+      title: '\u23F0 20-20-20 护眼定时器',
+      content: '<div class="timer-wrap">' +
+        '<p style="color:rgba(255,255,255,0.55);font-size:13px;margin-bottom:8px">每 20 分钟，看 20 英尺 (6米) 外，持续 20 秒</p>' +
+        '<div class="timer-ring">' +
+        '<svg viewBox="0 0 180 180">' +
+        '<defs><linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs>' +
+        '<circle cx="90" cy="90" r="82" class="timer-ring-bg"/>' +
+        '<circle cx="90" cy="90" r="82" class="timer-ring-progress" id="timerRingProgress" stroke-dasharray="515.2" stroke-dashoffset="0"/>' +
+        '</svg>' +
+        '<div class="timer-ring-text">' +
+        '<div class="timer-ring-time" id="timer2020Display">20:00</div>' +
+        '<div class="timer-ring-label">分钟:秒</div>' +
+        '</div></div>' +
+        '<div class="timer-controls">' +
+        '<button class="timer-btn-new start" id="timer2020Start" onclick="startTimer2020()">\u25B6 开始计时</button>' +
+        '<button class="timer-btn-new stop" id="timer2020Stop" onclick="stopTimer2020()" style="display:none">\u23F9 停止</button>' +
+        '</div>' +
+        '<div style="margin-top:16px;padding:12px;background:rgba(74,222,128,0.06);border-radius:10px;border:1px solid rgba(74,222,128,0.12)">' +
+        '<p style="color:rgba(255,255,255,0.5);font-size:11px;line-height:1.6">\u{1F4A1} 20-20-20 法则是国际公认的护眼方法：<br>每用眼 20 分钟，远眺 20 英尺 (约6米) 外，持续至少 20 秒。<br>可有效缓解视疲劳和预防近视加深。</p>' +
+        '</div></div>'
+    },
+    relax: {
+      title: '\u{1F9D8} 眼部放松操',
+      getContent: function() {
+        var stepsHtml = relaxSteps.map(function(s, i) {
+          var isActive = relaxActiveStep === i;
+          return '<div class="relax-step' + (isActive?' active':'') + '" onclick="startRelaxStep('+i+')">' +
+            '<div class="relax-step-num">' + s.icon + '</div>' +
+            '<div class="relax-step-text">' +
+            '<div class="relax-step-title">' + s.title + '</div>' +
+            '<div class="relax-step-desc">' + s.desc + '</div>' +
+            '</div>' +
+            '<div class="relax-step-time">' + (isActive ? '\u{1F534} 进行中' : s.time) + '</div>' +
+            '</div>';
+        }).join('');
+        return '<div class="relax-wrap">' +
+          '<p style="color:rgba(255,255,255,0.55);font-size:13px;margin-bottom:12px">点击任意步骤开始引导训练，建议每工作 1 小时做一次</p>' +
+          '<div class="relax-steps">' + stepsHtml + '</div>' +
+          (relaxActiveStep >= 0 ?
+            '<button class="relax-start-btn" onclick="stopRelax()" style="background:linear-gradient(135deg,#ef4444,#f97316)">\u23F9 结束放松操</button>' :
+            '<button class="relax-start-btn" onclick="startRelaxAll()">\u25B6 开始完整眼操 (约3分钟)</button>') +
+          '</div>';
+      }
+    },
+    tips: {
+      title: '\u{1F4A1} 护眼知识',
+      content: '<div class="tips-wrap">' +
+        '<div class="tips-category">' +
+        '<div class="tips-cat-header"><div class="tips-cat-icon" style="background:linear-gradient(135deg,rgba(102,126,234,0.15),rgba(118,75,162,0.15))">\u{1F4F1}</div>屏幕使用</div>' +
+        '<div class="tips-item"><div class="tips-bullet"></div>屏幕距离眼睛 50-70 厘米</div>' +
+        '<div class="tips-item"><div class="tips-bullet"></div>屏幕中心略低于眼睛水平线</div>' +
+        '<div class="tips-item"><div class="tips-bullet"></div>亮度与环境光协调，避免过亮或过暗</div>' +
+        '<div class="tips-item"><div class="tips-bullet"></div>调大字体减少眯眼，开启蓝光过滤</div>' +
+        '</div>' +
+        '<div class="tips-category">' +
+        '<div class="tips-cat-header"><div class="tips-cat-icon" style="background:linear-gradient(135deg,rgba(255,210,0,0.15),rgba(247,151,30,0.15))">\u{1F319}</div>光线环境</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#ffd200"></div>避免在完全黑暗中看屏幕</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#ffd200"></div>使用柔和的背景灯，减少屏幕与环境对比</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#ffd200"></div>减少屏幕反光，调整角度避免窗户反射</div>' +
+        '</div>' +
+        '<div class="tips-category">' +
+        '<div class="tips-cat-header"><div class="tips-cat-icon" style="background:linear-gradient(135deg,rgba(74,222,128,0.15),rgba(34,211,238,0.15))">\u{1F957}</div>营养补充</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#4ade80"></div>维生素 A：胡萝卜、菠菜、动物肝脏</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#4ade80"></div>叶黄素：玉米、蛋黄、猕猴桃</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#4ade80"></div>Omega-3：深海鱼（三文鱼、沙丁鱼）</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#4ade80"></div>花青素：蓝莓、紫甘蓝、紫薯</div>' +
+        '</div>' +
+        '<div class="tips-category">' +
+        '<div class="tips-cat-header"><div class="tips-cat-icon" style="background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(129,140,248,0.15))">\u{1F3C3}</div>日常习惯</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#a78bfa"></div>每天户外活动至少 2 小时（自然光预防近视）</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#a78bfa"></div>多眨眼保持眼球湿润，预防干眼症</div>' +
+        '<div class="tips-item"><div class="tips-bullet" style="background:#a78bfa"></div>每年至少一次专业眼科检查</div>' +
+        '</div></div>'
+    }
+  };
+
+  /* ═══ 定时器变量 ═══ */
+  var timer2020Interval = null;
+  var timer2020Seconds = 20 * 60;
+  var TIMER_TOTAL = 20 * 60;
+  var CIRCUMFERENCE = 2 * Math.PI * 82;
+
+  /* ═══ 打开小工具 ═══ */
+  window.openVisTool = function(toolId) {
+    var tool = visTools[toolId];
+    if (!tool) return;
+    var body = document.getElementById('visToolBody');
+    var titleHtml = '<div class="vis-tool-title">' + tool.title + '</div>';
+    var contentHtml = tool.getContent ? tool.getContent() : tool.content;
+    body.innerHTML = titleHtml + contentHtml;
+    document.getElementById('visToolPanel').classList.add('active');
+    if (toolId === 'timer2020') updateTimerRing();
+  };
+
+  /* ═══ 关闭小工具 ═══ */
+  window.closeVisTool = function() {
+    document.getElementById('visToolPanel').classList.remove('active');
+    if (timer2020Interval) stopTimer2020();
+    relaxActiveStep = -1;
+  };
+
+  /* ═══ 定时器 ═══ */
+  function updateTimerRing() {
+    var el = document.getElementById('timerRingProgress');
+    if (!el) return;
+    var progress = timer2020Seconds / TIMER_TOTAL;
+    el.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+  }
+
+  window.startTimer2020 = function() {
+    if (timer2020Interval) return;
+    var s = document.getElementById('timer2020Start');
+    var e = document.getElementById('timer2020Stop');
+    if (s) s.style.display = 'none';
+    if (e) e.style.display = 'inline-flex';
+    timer2020Interval = setInterval(function() {
+      timer2020Seconds--;
+      if (timer2020Seconds <= 0) {
+        timer2020Seconds = TIMER_TOTAL;
+        alert('\u23F0 20 分钟到了！请看 6 米外的物体，持续 20 秒。');
+      }
+      var d = document.getElementById('timer2020Display');
+      if (d) {
+        var min = Math.floor(timer2020Seconds / 60);
+        var sec = timer2020Seconds % 60;
+        d.textContent = (min<10?'0':'') + min + ':' + (sec<10?'0':'') + sec;
+      }
+      updateTimerRing();
+    }, 1000);
+  };
+
+  window.stopTimer2020 = function() {
+    if (timer2020Interval) { clearInterval(timer2020Interval); timer2020Interval = null; }
+    timer2020Seconds = TIMER_TOTAL;
+    var d = document.getElementById('timer2020Display');
+    if (d) d.textContent = '20:00';
+    var s = document.getElementById('timer2020Start');
+    var e = document.getElementById('timer2020Stop');
+    if (s) s.style.display = 'inline-flex';
+    if (e) e.style.display = 'none';
+    updateTimerRing();
+  };
+
+  /* ═══ 色盲测试 ═══ */
+  window.checkColorAnswer = function(btn, answer) {
+    var t = colorTests[colorTestIdx];
+    var ok = answer === t.answer;
+    colorTestResults.push(ok);
+    btn.classList.add(ok ? 'correct' : 'wrong');
+    setTimeout(function() {
+      colorTestIdx++;
+      var body = document.getElementById('visToolBody');
+      if (colorTestIdx >= colorTests.length) {
+        var pass = colorTestResults.filter(function(r){return r}).length;
+        var total = colorTests.length;
+        var emoji = pass===total ? '\u{1F389}' : pass>=total*0.6 ? '\u{1F44D}' : '\u26A0\uFE0F';
+        var msg = pass===total ? '完美通过！色觉正常' : pass>=total*0.6 ? '基本正常，建议定期复查' : '建议到专业机构做详细色觉检查';
+        body.innerHTML = '<div class="vis-tool-title">\u{1F3A8} 测试结果</div>' +
+          '<div style="text-align:center;padding:20px 0">' +
+          '<div style="font-size:48px;margin-bottom:12px">' + emoji + '</div>' +
+          '<div style="font-size:28px;font-weight:700;color:white;margin-bottom:8px">' + pass + ' / ' + total + '</div>' +
+          '<p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6">' + msg + '</p>' +
+          '<button class="relax-start-btn" onclick="resetColorTest()" style="margin-top:20px">\u{1F504} 重新测试</button>' +
+          '</div>';
+      } else {
+        body.innerHTML = '<div class="vis-tool-title">\u{1F3A8} 色盲测试</div>' + visTools.color.getContent();
+      }
+    }, 600);
+  };
+
+  window.resetColorTest = function() {
+    colorTestIdx = 0;
+    colorTestResults = [];
+    var body = document.getElementById('visToolBody');
+    body.innerHTML = '<div class="vis-tool-title">\u{1F3A8} 色盲测试</div>' + visTools.color.getContent();
+  };
+
+  /* ═══ 散光测试 ═══ */
+  window.setAstigEye = function(eye) {
+    astigEye = eye;
+    var body = document.getElementById('visToolBody');
+    body.innerHTML = '<div class="vis-tool-title">' + visTools.astigmatism.title + '</div>' + visTools.astigmatism.getContent();
+  };
+
+  /* ═══ 眼部放松操 ═══ */
+  window.startRelaxStep = function(idx) {
+    relaxActiveStep = idx;
+    var body = document.getElementById('visToolBody');
+    body.innerHTML = '<div class="vis-tool-title">' + visTools.relax.title + '</div>' + visTools.relax.getContent();
+  };
+  window.startRelaxAll = function() {
+    relaxActiveStep = 0;
+    var body = document.getElementById('visToolBody');
+    body.innerHTML = '<div class="vis-tool-title">' + visTools.relax.title + '</div>' + visTools.relax.getContent();
+  };
+  window.stopRelax = function() {
+    relaxActiveStep = -1;
+    var body = document.getElementById('visToolBody');
+    body.innerHTML = '<div class="vis-tool-title">' + visTools.relax.title + '</div>' + visTools.relax.getContent();
+  };
+
+  /* ═══ 点击面板外部关闭 ═══ */
+  document.getElementById('visToolPanel').addEventListener('click', function(e) {
+    if (e.target === this) closeVisTool();
+  });
+
+  console.log('[VisTools] 眼健康小工具 v2 已加载');
+})();
+</script>
+
 </body></html>
